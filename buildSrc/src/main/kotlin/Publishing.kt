@@ -44,8 +44,14 @@ fun MavenPom.configureMavenCentralMetadata(project: Project) {
     }
 }
 
-fun mavenRepositoryUri(): URI {
-    // TODO -SNAPSHOT detection can be made here as well
+fun mavenRepositoryUri(project: Project): URI {
+    // 支持私有Maven仓库配置 - 先检查gradle.properties中的配置
+    val customRepoUrl: String? = project.getSensitiveProperty("maven.repo.url")
+        ?: System.getProperty("maven.repo.url")
+    if (customRepoUrl != null) {
+        return URI(customRepoUrl)
+    }
+    // 原有的Sonatype配置
     val repositoryId: String? = System.getenv("libs.repository.id")
     return if (repositoryId == null) {
         URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
@@ -56,10 +62,18 @@ fun mavenRepositoryUri(): URI {
 
 fun configureMavenPublication(rh: RepositoryHandler, project: Project) {
     rh.maven {
-        url = mavenRepositoryUri()
+        url = mavenRepositoryUri(project)
         credentials {
-            username = project.getSensitiveProperty("libs.sonatype.user")
-            password = project.getSensitiveProperty("libs.sonatype.password")
+            // 支持自定义Maven仓库认证信息
+            val customUser = project.getSensitiveProperty("maven.user")
+                ?: project.getSensitiveProperty("libs.sonatype.user")
+                ?: System.getProperty("maven.user")
+            val customPassword = project.getSensitiveProperty("maven.password")
+                ?: project.getSensitiveProperty("libs.sonatype.password")
+                ?: System.getProperty("maven.password")
+
+            username = customUser
+            password = customPassword
         }
     }
 }

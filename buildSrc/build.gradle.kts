@@ -12,6 +12,10 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
+    // add
+    maven {
+        url = uri("https://mirrors.tencent.com/nexus/repository/maven-public/")
+    }
 }
 
 val kotlinVersion = run {

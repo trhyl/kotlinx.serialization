@@ -52,6 +52,10 @@ buildscript {
         // For Dokka that depends on kotlinx-html
         maven { url "https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven" }
         mavenLocal()
+        // Add
+        maven {
+            url = uri("https://mirrors.tencent.com/nexus/repository/maven-public/")
+        }
     }
 
     configurations.classpath {
@@ -105,7 +109,8 @@ dependencies {
 }
 
 allprojects {
-    group 'org.jetbrains.kotlinx'
+    // modify
+    group 'com.zlzhaopin.kotlinx'
 
     def deployVersion = properties['DeployVersion']
     if (deployVersion != null) version = deployVersion
@@ -122,6 +127,10 @@ allprojects {
         repositories {
             mavenLocal()
             maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+            // add
+            maven {
+                url = uri("https://mirrors.tencent.com/nexus/repository/maven-public/")
+            }
         }
     }
 
@@ -142,7 +151,10 @@ allprojects {
         maven { url "https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven" }
         // For local development
         mavenLocal()
-
+        // add
+        maven {
+            url = uri("https://mirrors.tencent.com/nexus/repository/maven-public/")
+        }
     }
 }
 
@@ -171,25 +183,27 @@ subprojects {
     if (excludedFromBomProjects.contains(project.name)) return
 
     // Animalsniffer setup
-    apply plugin: 'ru.vyarus.animalsniffer'
+    // temporarily disabled for Kotlin 2.0.21-KBA-004
+//    apply plugin: 'ru.vyarus.animalsniffer'
 
     afterEvaluate { // Can be applied only when the project is evaluated
-        animalsniffer {
-            sourceSets = [sourceSets.main]
-            def annotationValue = "kotlinx.serialization.json.internal.SuppressAnimalSniffer"
-            switch (name) {
-                case "kotlinx-serialization-core":
-                    annotationValue = "kotlinx.serialization.internal.SuppressAnimalSniffer"
-                    break
-                case "kotlinx-serialization-hocon":
-                    annotationValue = "kotlinx.serialization.hocon.internal.SuppressAnimalSniffer"
-                    break
-            }
-            annotation = annotationValue
-        }
+        // temporarily disabled for Kotlin 2.0.21-KBA-004
+//        animalsniffer {
+//            sourceSets = [sourceSets.main]
+//            def annotationValue = "kotlinx.serialization.json.internal.SuppressAnimalSniffer"
+//            switch (name) {
+//                case "kotlinx-serialization-core":
+//                    annotationValue = "kotlinx.serialization.internal.SuppressAnimalSniffer"
+//                    break
+//                case "kotlinx-serialization-hocon":
+//                    annotationValue = "kotlinx.serialization.hocon.internal.SuppressAnimalSniffer"
+//                    break
+//            }
+//            annotation = annotationValue
+//        }
         dependencies {
-            signature 'net.sf.androidscents.signature:android-api-level-14:4.0_r4@signature'
-            signature 'org.codehaus.mojo.signature:java18:1.0@signature'
+//            signature 'net.sf.androidscents.signature:android-api-level-14:4.0_r4@signature'
+//            signature 'org.codehaus.mojo.signature:java18:1.0@signature'
         }
 
         // Add dependency on kotlinx-serialization-bom inside other kotlinx-serialization modules themselves, so they have same versions
