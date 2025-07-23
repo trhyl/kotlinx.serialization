@@ -79,12 +79,9 @@ fun main() {
 ## 适配鸿蒙平台的具体步骤
 
 * 根据Android项目Kotlin版本选择「kotlinx-serialization」对应fork的tag分支
-    * 例如：我们项目使用Gradle 7.4，Kotlin 1.8.22，JDK
-      17，则选择[「kotlinx-serialization」的1.5.1分支的tag](https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1)
+    * 例如：我们项目使用Gradle 7.4，Kotlin 1.8.22，JDK 17，则选择[「kotlinx-serialization」的1.5.1分支的tag](https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1)
 * 修改「group」和「version」，防止与官方冲突
-*
-按照[Kuikly文档](https://kuikly.tds.qq.com/%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/kuiklybase-ohos-kn.html)
-操作
+* 按照[Kuikly文档](https://kuikly.tds.qq.com/%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/kuiklybase-ohos-kn.html)操作
     * 添加 Kuikly Maven 源
     * 设置依赖插件的版本对应 Kuikly Kotlin 版本，例如：kotlin("multiplatform").version("2.0.21-KBA-004")
     * 通过Kuikly Example 编译HarmonyOS产物日志得到信息：
@@ -92,12 +89,10 @@ fun main() {
         * 编译工具：「konanc」编译器（Kotlin/Native），使用 clang++和 ld.lld进行本地代码链接
         * Kotlin版本：kotlin-native-prebuilt-macos-x86_64-2.0.21-KBA-004
         * 产物：源于 Kotlin/Native自动生成 C++代码（api.cpp)
-    * 分析：通过通过构建日志信息可以认为「ohos_arm64」是 Kotlin/Native支持的一个目标平台，可以将其平台认为是一个原生（Native）目标，与
-  iOS、macOS、Linux 同级。
+    * 分析：通过通过构建日志信息可以认为「ohos_arm64」是 Kotlin/Native支持的一个目标平台，可以将其平台认为是一个原生（Native）目标，与 iOS、macOS、Linux 同级。
     * 适配步骤：
         * 在 KMP 模块「build.gradle.kt」添加鸿蒙平台「ohosArm64」编译目标;
-        * 在 KMP 模块中添加「ohosArm64main」鸿蒙平台目录，并且实现「actual fun」，可以复制源代码中的 NativeMain
-  的实现。
+        * 在 KMP 模块中添加「ohosArm64main」鸿蒙平台目录，并且实现「actual fun」，可以复制源代码中的「NativeMain」的实现。
         * 发布到私仓
 
 ## 发布脚本
