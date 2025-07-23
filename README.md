@@ -52,7 +52,11 @@ repositories {
 }
 
 dependencies {
-    implementation("<#自定义 group#>:kotlinx-serialization-json:<#基于1.5.1fork 的递增版本号#>")
+
+    implementation("<#自定义 group#>:kotlinx-serialization-core-ohosarm64::<#基于1.5.1fork 的递增版本号#>")
+    implementation("<#自定义 group#>:kotlinx-serialization-json-ohosarm64::<#基于1.5.1fork 的递增版本号#>") {
+        exclude(group = "com.zhaopin.kotlinx", module = "kotlinx-serialization-core")
+    }
 }
 ```
 
