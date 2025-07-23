@@ -1,318 +1,94 @@
-# Kotlin multiplatform / multi-format reflectionless serialization
+# 基于Kuikly的鸿蒙平台的Serialization能力
 
-[![Kotlin Stable](https://kotl.in/badges/stable.svg)](https://kotlinlang.org/docs/components-stability.html)
-[![JetBrains official project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
-[![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
-[![TeamCity build](https://img.shields.io/teamcity/http/teamcity.jetbrains.com/s/KotlinTools_KotlinxSerialization_Ko.svg)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=KotlinTools_KotlinxSerialization_Ko&guest=1)
-[![Kotlin](https://img.shields.io/badge/kotlin-1.8.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
-[![Maven Central](https://img.shields.io/maven-central/v/org.jetbrains.kotlinx/kotlinx-serialization-core/1.5.1)](https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-core/1.5.1)
-[![KDoc link](https://img.shields.io/badge/API_reference-KDoc-blue)](https://kotlinlang.org/api/kotlinx.serialization/)
-[![Slack channel](https://img.shields.io/badge/chat-slack-blue.svg?logo=slack)](https://kotlinlang.slack.com/messages/serialization/)
+* 只支持 HarmonyOS Native平台。
+* 提供类注解 `@Serializable` 并且支持标准集合类型。
+* 只支持Json格式。
 
-Kotlin serialization consists of a compiler plugin, that generates visitor code for serializable classes,
- runtime library with core serialization API and support libraries with various serialization formats.
+## 背景
 
-* Supports Kotlin classes marked as `@Serializable` and standard collections.
-* Provides [JSON](formats/README.md#JSON), [Protobuf](formats/README.md#ProtoBuf), [CBOR](formats/README.md#CBOR), [Hocon](formats/README.md#HOCON) and [Properties](formats/README.md#properties) formats.
-* Complete multiplatform support: JVM, JS and Native.
+[Kuikly跨端KMP无法直接使用官方 KMP 库，需要适配。](https://github.com/Tencent-TDS/KuiklyUI/issues/187)
 
-## Table of contents
+## 准备
 
-<!--- TOC -->
+阅读[KMP模块鸿蒙 Kotlin/Native 适配](https://kuikly.tds.qq.com/%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/kuiklybase-ohos-kn.html)
 
-* [Introduction and references](#introduction-and-references)
-* [Setup](#setup)
-  * [Gradle](#gradle)
-    * [Using the `plugins` block](#using-the-plugins-block)
-    * [Using `apply plugin` (the old way)](#using-apply-plugin-the-old-way)
-    * [Dependency on the JSON library](#dependency-on-the-json-library)
-  * [Android](#android)
-  * [Multiplatform (Common, JS, Native)](#multiplatform-common-js-native)
-  * [Maven](#maven)
-  * [Bazel](#bazel)
+### Gradle
 
-<!--- END -->
+必须做两件事：
+1) 添加 **[插件](#1-setting-up-the-serialization-plugin)**.
+2) 添加 **[依赖库](#2-dependency-on-the-json-library)**.
 
-* **Additional links**
-  * [Kotlin Serialization Guide](docs/serialization-guide.md)
-  * [Full API reference](https://kotlinlang.org/api/kotlinx.serialization/)
-  * [Submitting issues and PRs](CONTRIBUTING.md)
-  * [Building this library](docs/building.md)
+#### 1) 设置插件
 
-## Introduction and references
+设置的「kotlinx-serialization」插件，其版本必须对应 Kuikly Kotlin 定制化版本。例如：[2.0.21-KBA-004](https://kuikly.tds.qq.com/%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/kuiklybase-ohos-kn.html#%E4%BD%BF%E7%94%A8%E5%AE%9A%E5%88%B6%E5%8C%96kotlin%E7%89%88%E6%9C%AC)
 
-Here is a small example.
+Kotlin DSL:
+
+```kotlin
+plugins {
+    kotlin("multiplatform") version "2.0.21-KBA-004"
+    kotlin("plugin.serialization") version "2.0.21-KBA-004"
+}
+```
+
+#### 2) 添加依赖库
+
+在设置插件之后，添加「kotlinx-serialization」依赖。
+
+Kotlin DSL:
+
+```kotlin
+repositories {
+    maven {
+        // 用于拉取 Kuikly 定制的 kotlinx-serialization 私仓依赖
+        url = uri("https://maven-central.<#私仓地址#>")
+    }
+    maven {
+        // 用于拉取 Kotlin Kuikly 定制版本依赖
+        url = uri("https://mirrors.tencent.com/nexus/repository/maven-public/")
+    }
+}
+
+dependencies {
+    implementation("<#自定义 group#>:kotlinx-serialization-json:<#基于1.5.1fork 的递增版本号#>")
+}
+```
+
+## 使用示例
 
 ```kotlin
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 
-@Serializable 
+@Serializable
 data class Project(val name: String, val language: String)
 
 fun main() {
     // Serializing objects
     val data = Project("kotlinx.serialization", "Kotlin")
-    val string = Json.encodeToString(data)  
+    val string = Json.encodeToString(data)
     println(string) // {"name":"kotlinx.serialization","language":"Kotlin"} 
     // Deserializing back into objects
     val obj = Json.decodeFromString<Project>(string)
     println(obj) // Project(name=kotlinx.serialization, language=Kotlin)
 }
-``` 
-
-> You can get the full code [here](guide/example/example-readme-01.kt).
-
-<!--- TEST_NAME ReadmeTest -->
-
-<!--- TEST 
-{"name":"kotlinx.serialization","language":"Kotlin"}
-Project(name=kotlinx.serialization, language=Kotlin)
--->
-
-**Read the [Kotlin Serialization Guide](docs/serialization-guide.md) for all details.**
-
-You can find auto-generated documentation website on [kotlinlang.org](https://kotlinlang.org/api/kotlinx.serialization/).
-
-## Setup
-
-Kotlin serialization plugin is shipped with the Kotlin compiler distribution, and the IDEA plugin is bundled into the Kotlin plugin.
-
-Using Kotlin Serialization requires Kotlin compiler `1.4.0` or higher.
-Make sure you have the corresponding Kotlin plugin installed in the IDE, no additional plugins for IDE are required.
-
-### Gradle
-
-#### Using the `plugins` block
-
-You can set up the serialization plugin with the Kotlin plugin using 
-[Gradle plugins DSL](https://docs.gradle.org/current/userguide/plugins.html#sec:plugins_block):
-
-Kotlin DSL:
-
-```kotlin
-plugins {
-    kotlin("jvm") version "1.8.21" // or kotlin("multiplatform") or any other kotlin plugin
-    kotlin("plugin.serialization") version "1.8.21"
-}
-```       
-
-Groovy DSL:
-
-```gradle
-plugins {
-    id 'org.jetbrains.kotlin.multiplatform' version '1.8.21'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.21'
-}
 ```
 
-> Kotlin versions before 1.4.0 are not supported by the stable release of Kotlin serialization
+## 适配鸿蒙平台的具体步骤
 
-#### Using `apply plugin` (the old way)
-
-First, you have to add the serialization plugin to your classpath as the other [compiler plugins](https://kotlinlang.org/docs/reference/compiler-plugins.html):
-
-Kotlin DSL:
-
-```kotlin
-buildscript {
-    repositories { mavenCentral() }
-
-    dependencies {
-        val kotlinVersion = "1.8.21"
-        classpath(kotlin("gradle-plugin", version = kotlinVersion))
-        classpath(kotlin("serialization", version = kotlinVersion))
-    }
-}
-```
-
-Groovy DSL:
-
-```gradle
-buildscript {
-    ext.kotlin_version = '1.8.21'
-    repositories { mavenCentral() }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
-    }
-}
-```
-
-Then you can `apply plugin` (example in Groovy):
-
-```gradle
-apply plugin: 'kotlin' // or 'kotlin-multiplatform' for multiplatform projects
-apply plugin: 'kotlinx-serialization'
-```
-
-#### Dependency on the JSON library
-
-After setting up the plugin one way or another, you have to add a dependency on the serialization library.
-Note that while the plugin has version the same as the compiler one, runtime library has different coordinates, repository and versioning.
-
-Kotlin DSL:
-
-```kotlin
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
-}
-```
-
-Groovy DSL:
-
-```gradle
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1"
-}
-```
-
->We also provide `kotlinx-serialization-core` artifact that contains all serialization API but does not have bundled serialization format with it
-
-### Android
-
-By default, proguard rules are supplied with the library.
-[These rules](rules/common.pro) keep serializers for _all_ serializable classes that are retained after shrinking,
-so you don't need additional setup.
-
-**However, these rules do not affect serializable classes if they have named companion objects.**
-
-If you want to serialize classes with named companion objects, you need to add and edit rules below to your `proguard-rules.pro` configuration. 
-
-Note that the rules for R8 differ depending on the [compatibility mode](https://r8.googlesource.com/r8/+/refs/heads/master/compatibility-faq.md) used.
-
-<details>
-<summary>Example of named companion rules for ProGuard and R8 compatibility mode</summary>
-
-```proguard
-# Serializer for classes with named companion objects are retrieved using `getDeclaredClasses`.
-# If you have any, replace classes with those containing named companion objects.
--keepattributes InnerClasses # Needed for `getDeclaredClasses`.
-
--if @kotlinx.serialization.Serializable class
-com.example.myapplication.HasNamedCompanion, # <-- List serializable classes with named companions.
-com.example.myapplication.HasNamedCompanion2
-{
-    static **$* *;
-}
--keepnames class <1>$$serializer { # -keepnames suffices; class is kept when serializer() is kept.
-    static <1>$$serializer INSTANCE;
-}
-```
-</details>
-
-
-<details>
-<summary>Example of named companion rules for R8 full mode</summary>
-
-```proguard
-# Serializer for classes with named companion objects are retrieved using `getDeclaredClasses`.
-# If you have any, replace classes with those containing named companion objects.
--keepattributes InnerClasses # Needed for `getDeclaredClasses`.
-
--if @kotlinx.serialization.Serializable class
-com.example.myapplication.HasNamedCompanion, # <-- List serializable classes with named companions.
-com.example.myapplication.HasNamedCompanion2
-{
-    static **$* *;
-}
--keepnames class <1>$$serializer { # -keepnames suffices; class is kept when serializer() is kept.
-    static <1>$$serializer INSTANCE;
-}
-
-# Keep both serializer and serializable classes to save the attribute InnerClasses
--keepclasseswithmembers, allowshrinking, allowobfuscation, allowaccessmodification class
-com.example.myapplication.HasNamedCompanion, # <-- List serializable classes with named companions.
-com.example.myapplication.HasNamedCompanion2
-{
-    *;
-}
-```
-</details>
-
-In case you want to exclude serializable classes that are used, but never serialized at runtime,
-you will need to write custom rules with narrower [class specifications](https://www.guardsquare.com/manual/configuration/usage).
-
-### Multiplatform (Common, JS, Native)
-
-Most of the modules are also available for Kotlin/JS and Kotlin/Native.
-You can add dependency to the required module right to the common source set:
-```gradle
-commonMain {
-    dependencies {
-        // Works as common dependency as well as the platform one
-        implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization_version"
-    }
-}
-```
-The same artifact coordinates can be used to depend on platform-specific artifact in platform-specific source-set.
-
-### Maven
-
-Ensure the proper version of Kotlin and serialization version:
-
-```xml
-<properties>
-    <kotlin.version>1.8.21</kotlin.version>
-    <serialization.version>1.5.1</serialization.version>
-</properties>
-```
-
-Add serialization plugin to Kotlin compiler plugin:
-
-```xml
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-maven-plugin</artifactId>
-            <version>${kotlin.version}</version>
-            <executions>
-                <execution>
-                    <id>compile</id>
-                    <phase>compile</phase>
-                    <goals>
-                        <goal>compile</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <compilerPlugins>
-                    <plugin>kotlinx-serialization</plugin>
-                </compilerPlugins>
-            </configuration>
-            <dependencies>
-                <dependency>
-                    <groupId>org.jetbrains.kotlin</groupId>
-                    <artifactId>kotlin-maven-serialization</artifactId>
-                    <version>${kotlin.version}</version>
-                </dependency>
-            </dependencies>
-        </plugin>
-    </plugins>
-</build>
-```
-
-Add dependency on serialization runtime library:
-
-```xml
-<dependency>
-    <groupId>org.jetbrains.kotlinx</groupId>
-    <artifactId>kotlinx-serialization-json</artifactId>
-    <version>${serialization.version}</version>
-</dependency>
-```
-
-### Bazel
-
-To setup the Kotlin compiler plugin for Bazel, follow [the
-example](https://github.com/bazelbuild/rules_kotlin/tree/master/examples/plugin/src/serialization)
-from the `rules_kotlin` repository.
+* 根据Android项目Kotlin版本选择「kotlinx-serialization」对应fork的tag分支
+* 例如：我们项目使用Gradle 7.4，Kotlin 1.8.22，JDK 17，则选择[「kotlinx-serialization」的1.5.1分支的tag](https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1)
+* 修改「group」和「version」，防止与官方冲突
+* 按照[Kuikly文档](https://kuikly.tds.qq.com/%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3/kuiklybase-ohos-kn.html)操作
+* 添加 Kuikly Maven 源
+* 设置依赖插件的版本对应 Kuikly Kotlin 版本，例如：kotlin("multiplatform").version("2.0.21-KBA-004")
+* 通过Kuikly Example 编译HarmonyOS产物日志得到信息：
+* HarmonyOS编译目标：ohos_arm64(HarmonyOS的 64位 Arm 架构)
+* 编译工具：「konanc」编译器（Kotlin/Native），使用 clang++和 ld.lld进行本地代码链接
+* Kotlin版本：kotlin-native-prebuilt-macos-x86_64-2.0.21-KBA-004
+* 产物：源于 Kotlin/Native自动生成 C++代码（api.cpp)
+* 分析：通过通过构建日志信息可以认为「ohos_arm64」是 Kotlin/Native支持的一个目标平台，可以将其平台认为是一个原生（Native）目标，与 iOS、macOS、Linux 同级。
+* 适配步骤：
+* 在 KMP 模块「build.gradle.kt」添加鸿蒙平台「ohosArm64」编译目标;
+* 在 KMP 模块中添加「ohosArm64main」鸿蒙平台目录，并且实现「actual fun」，可以复制源代码中的 NativeMain 的实现。
+* 发布到私仓
